@@ -27,26 +27,14 @@ let
     src = ./.;
     # cargoLock.lockFile = "${src}/Cargo.lock";
 
+    # - [nixpkgs dwm](https://github.com/NixOS/nixpkgs/blob/nixos-23.05/pkgs/applications/window-managers/dwm/default.nix#L34)
     buildInputs = with pkgs; [
-      # - [nixpkgs dwm](https://github.com/NixOS/nixpkgs/blob/nixos-23.05/pkgs/applications/window-managers/dwm/default.nix#L34)
+      pkg-config
       xorg.libX11
       xorg.libXft
       xorg.xmodmap
       fontconfig
-
-
-      # donno if necessary
-      xorg.libXinerama
-      xorg.libXi
-      xorg.libXrandr
-      xorg.libXcursor
-      gcc
-      libgccjit
-      pkg-config
-      unstable.cargo
       unstable.rustc
-      # unstable.clippy
-      glibc
 
       autoPatchelfHook
     ];
@@ -56,6 +44,7 @@ let
     nativeBuildInputs = buildInputs;
     packages = buildInputs;
 
+    # TODO: wrap xmodmap in PATH
     installPhase = ''
       mkdir -p $out/bin
       cp ${src}/target/debug/${name} $out/bin/${name}
@@ -81,10 +70,6 @@ in
   # Set your time zone.
   # time.timeZone = "Europe/Amsterdam";
 
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
   # Select internationalisation properties.
   # i18n.defaultLocale = "en_US.UTF-8";
   # console = {
@@ -104,9 +89,9 @@ in
     };
    
     displayManager = {
-        defaultSession = "none+wmmw";
+        defaultSession = "none+${wm.name}";
         # autoLogin = {
-        #   user = "issac";
+        #   user = "${wm.name}";
         #   enable = true;
         # };
     };
@@ -153,72 +138,9 @@ in
             last_modified="$current_modified"
           fi
         done
-
-        # # Monitor the file for changes
-        # while true; do
-        #     ${pkgs.inotify-tools}/bin/inotifywait -e modify "$file_to_monitor"
-        #     echo "Detected a change in $file_to_monitor"
-    
-        #     # Restart the command when a change is detected
-        #     restart_command
-        # done
-      
-        # while true; do
-        #   # log out to a file
-        #   /mnt/shared/target/debug/${wm.name} &> ~/.penrose.log
-        #   # ${wm}/bin/${wm.name} &> ~/.penrose.log
-        #   [[ $? > 0 ]] && mv ~/.penrose.log ~/prev-penrose.log
-        #   export RESTARTED=true
-        # done
-
-        # ${wm}/bin/${wm.name} &
-        # /mnt/shared/target/debug/${wm.name} &
-        # waitPID=$!
       '';
     }];
   };  
-  # systemd.services.mount-directory = {
-  #   enable = true;
-  #   description = "Mount shared directory in QEMU VM";
-  #   wantedBy = ["default.target"];
-  #   wants = [ "network.target" ];
-  #   # after = [ "network.target" "qemu-guest-agent.service" "graphical.target" "display-manager.service" ];
-  #   after = [ "network.target" ];
-  #   # requires = [ "graphical.target" "display-manager.service" ];
-  #   # before = [ "your-window-manager.service" ]; # Replace with your window manager's service name
-
-  #   # preStart = ''
-  #   #   ${pkgs.coreutils}/bin/sleep 10
-  #   # '';
-  #   script = ''
-  #     #!/bin/sh
-
-  #     echo "YOYOYOYOYOYOYOYOYOYOYOYOYYYOYOYOYO"
-
-  #     mkdir -p /mnt/shared
-  #     ${pkgs.mount}/bin/mount -t 9p -o trans=virtio,version=9p2000.L host0 /mnt/shared      
-
-  #     # command="${pkgs.mount}/bin/mount -t 9p -o trans=virtio,version=9p2000.L host0 /mnt/shared"
-
-  #     # # Mount the shared directory in the VM
-  #     # while true; do
-  #     #   output="$($command 2>&1)"
-  #     #   exit_status=$?
-
-  #     #   if [ $exit_status -eq 0 ]; then
-  #     #       echo "Command executed successfully."
-  #     #       break  # Exit the loop
-  #     #   else
-  #     #       echo "Command failed with exit status $exit_status. Retrying in 5 seconds..."
-  #     #       echo "Error message: $output"
-  #     #       echo "Command failed. Retrying in 5 seconds..."
-  #     #       ${pkgs.coreutils}/bin/sleep 5
-  #     #   fi
-  #     # done
-  #   '';
-
-  #   # environment.SYSTEMD_LOG_LEVEL = "debug"; # Optional for debugging
-  # };
 
   virtualisation = {
     virtualbox.guest.enable = true;
@@ -233,8 +155,8 @@ in
       memorySize = 2048;
       cores = 2;
       sharedDirectories = {
-        shared_wm = {
-          source = "/home/issac/0Git/wmmw";
+        project_dir = {
+          source = builtins.toString wm.src;
           target = "/mnt/shared";
         };
       };
@@ -249,62 +171,46 @@ in
   
 
   # Configure keymap in X11
-  # services.xserver.layout = "us";
-  # services.xserver.xkbOptions = "eurosign:e,caps:escape";
-
-  # Enable CUPS to print documents.
-  # services.printing.enable = true;
+  services.xserver.layout = "us";
 
   # Enable sound.
-  # sound.enable = true;
-  # hardware.pulseaudio.enable = true;
+  sound.enable = true;
+  hardware.pulseaudio.enable = true;
 
   # Enable touchpad support (enabled default in most desktopManager).
-  # services.xserver.libinput.enable = true;
+  services.xserver.libinput.enable = true;
 
-  # Define a user account. Don't forget to set a password with ‘passwd’.
-  users.users.issac = {
+  users.users."${wm.name}" = {
     isNormalUser = true;
     # - [NixOS:nixos-rebuild build-vm](https://nixos.wiki/wiki/NixOS:nixos-rebuild_build-vm)
-    initialPassword = "mypeasblue";
+    initialPassword = "${wm.name}";
     extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
-    packages = with pkgs; [
-      alacritty
-      polybarFull
-      dmenu-rs
-      helix
-      git
-      rofi
-      feh
-      zsh
-      bluez
-      dunst
-      picom
-      lf
-      du-dust
-
-      file
-      patchelf
-      llvmPackages_15.libcxxClang
-      gcc
-      libgccjit
-      pkg-config
-      unstable.cargo
-      unstable.rustc
-      glibc
-      xorg.xmodmap
-    ];
+    # packages = with pkgs; [];
   };
 
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
   environment.systemPackages = with pkgs; [
+    alacritty
+    polybarFull
+    dmenu-rs
+    helix
+    git
+    rofi
+    feh
+    zsh
+    bluez
+    dunst
+    picom
+    lf
+    du-dust
+    file
+    patchelf
     vim
     wget
     mount
-    inotify-tools
-    
-     wm
+
+    xorg.xmodmap
+
+    wm
   ];
 
   system.stateVersion = "23.05";
