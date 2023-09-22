@@ -20,22 +20,20 @@ let
   };
   pkgs = import pinnedPkgs { overlays = [ stable-overlays ]; };
   unstable = import unstablePinned { overlays = [ unstable-overlays ]; };
-in pkgs.mkShell {
+in
+pkgs.mkShell {
     packages = with pkgs; [
         # rustup
         unstable.cargo
         unstable.rustc
-        unstable.clippy
 
         pkg-config
         fontconfig
         xorg.libX11
         xorg.libXft
         xorg.xmodmap
-        # xorg.libXi
-        # xorg.libXrandr
-        # xorg.libXcursor
 
         unstable.rust-analyzer
+        unstable.clippy
     ];
 }
