@@ -26,15 +26,24 @@ use tracing_subscriber::{self, prelude::*};
 const FONT: &str = "ProFontIIx Nerd Font";
 const BLACK: u32 = 0x282828ff;
 const WHITE: u32 = 0xebdbb2ff;
-const GREY: u32 = 0x3c3836ff;
+// const GREY: u32 = 0x3c3836ff;
 const BLUE: u32 = 0x458588ff;
+
+// gruvbox
+const BG0: u32 = 0x282828d1;
+const BG1: u32 = 0x3c3836d1;
+const BG2: u32 = 0x504945d1;
+const BG3: u32 = 0x665c54d1;
+const AQUA: u32 = 0x8ec07cd1;
+const FG0: u32 = 0xfbf1c7d1;
+const GRAY: u32 = 0x928374d1;
 
 const MAX_MAIN: u32 = 1;
 const RATIO: f32 = 0.6;
 const RATIO_STEP: f32 = 0.1;
 const OUTER_PX: u32 = 0;
 const INNER_PX: u32 = 0;
-const BAR_HEIGHT_PX: u32 = 18;
+const BAR_HEIGHT_PX: u32 = 15;
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
 enum Mode {
@@ -219,18 +228,18 @@ fn main() -> Result<()> {
 
     let conn = RustConn::new()?;
     let style = TextStyle {
-        fg: WHITE.into(),
-        bg: Some(BLACK.into()),
+        fg: FG0.into(),
+        bg: Some(BG0.into()),
         padding: (2, 2),
     };
 
-    let bar = status_bar(BAR_HEIGHT_PX, FONT, 8, style, BLUE, GREY, Position::Top).unwrap();
+    let bar = status_bar(BAR_HEIGHT_PX, FONT, 8, style, BG1, GRAY, Position::Top).unwrap();
 
     let mut config = add_ewmh_hooks(Config {
         default_layouts: layouts(),
         border_width: 1,
-        focused_border: BLUE.into(),
-        normal_border: GREY.into(),
+        focused_border: AQUA.into(),
+        normal_border: BG1.into(),
         // focus_follow_mouse: false,
         ..Config::default()
     });
