@@ -48,12 +48,6 @@ layout {
             args "--command" "hx ."
         }
     }
-    tab name="zsh"{
-        pane stacked=true {
-            pane name="zsh"
-            nix name="nix-shell"
-        }
-    }
     tab name="commands" {
         pane stacked=true {
             nix start_suspended=true name="dev build" {
@@ -72,14 +66,22 @@ layout {
             }
         }
     }
-    tab name="logs" cwd="./target" {
-        pane start_suspended=true name="logs" {
-            command "nvim"
-            args "log.log"
+    tab name="shell"{
+        pane stacked=true {
+            pane name="zsh"
+            nix name="nix-shell"
         }
-        pane start_suspended=true name="prev logs" {
-            command "nvim"
-            args "prev.log"
+    }
+    tab name="logs" cwd="./target" {
+        pane stacked=true {
+            pane start_suspended=true name="logs" {
+                command "nvim"
+                args "log.log"
+            }
+            pane start_suspended=true name="prev logs" {
+                command "nvim"
+                args "prev.log"
+            }
         }
     }
 }
